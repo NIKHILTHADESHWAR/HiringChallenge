@@ -23,12 +23,10 @@ public class GameController {
     @GetMapping("/start")
     public StartModel startGame() {
         String token = util.generateToken();
-        System.out.println("Token : "+token);
         GameDao newGame = new GameDao();
         newGame.setToken(token);
         newGame.setServerScore(0);
         newGame.setUserScore(0);
-        System.out.println("Game : "+newGame);
         gameRepository.save(newGame);
         StartModel model = StartModel.build(token,"READY");
 
@@ -38,19 +36,13 @@ public class GameController {
     @GetMapping("/v1/{token}/{userMove}")
     public PlayModel playGameRandom(@PathVariable("token") String token, @PathVariable("userMove") String userMove) {
         GameDao game = gameRepository.findById(token).get();
-        System.out.println("Game : "+game);
 
         String serverMove = util.generateRandomServerMove();
-        System.out.println("ServerMove : "+serverMove);
-        System.out.println("UserMove : "+userMove);
         int[] score = util.findWinner(userMove,serverMove);
-        System.out.println("Score[0] : "+score[0]);
-        System.out.println("Score[1] : "+score[1]);
 
         game.setUserScore(game.getUserScore()+score[0]);
         game.setServerScore(game.getServerScore()+score[1]);
 
-        System.out.println("Game After : "+game);
         gameRepository.save(game);
 
         if(game.getUserScore()>=3 || game.getServerScore()>=3)
@@ -63,23 +55,14 @@ public class GameController {
     @GetMapping("/v2/{token}/{userMove}")
     public PlayModel playGameStrategic(@PathVariable("token") String token, @PathVariable("userMove") String userMove) {
         GameDao game = gameRepository.findById(token).get();
-        System.out.println("Game : "+game);
 
         String serverMove = util.generateStrategicServerMove(userMove);
-        System.out.println("ServerMove : "+serverMove);
-        System.out.println("UserMove : "+userMove);
         int[] score = util.findWinner(userMove,serverMove);
-        System.out.println("Score[0] : "+score[0]);
-        System.out.println("Score[1] : "+score[1]);
 
         game.setUserScore(game.getUserScore()+score[0]);
         game.setServerScore(game.getServerScore()+score[1]);
 
-        System.out.println("Game After : "+game);
-        gameRepository.save(game);
-
-        if(game.getUserScore()>=3 || game.getServerScore()>=3)
-            gameRepository.deleteById(token);
+        gameRepository.deleteById(token);
 
         return PlayModel.build(serverMove,game.getServerScore()+game.getUserScore());
     }
